@@ -18,7 +18,10 @@ public class CityServiceImpl implements CityService {
     private CityDao cityDao;
 
     public City findCityByName(String cityName) {
-        return cityDao.findByName(cityName);
+        City city = new City();
+        city.setId(Long.valueOf("111"));
+        city.setCityName("武汉");
+        return city;
     }
 
 }
