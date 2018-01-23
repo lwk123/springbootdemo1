@@ -1,9 +1,11 @@
+package cn.com.gei.kmp4;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.ServletComponentScan;
 
 @SpringBootApplication
-// mapper 接口类扫描包配置
+@ServletComponentScan
 public class SpringbootdemoApplication {
 
 	public static void main(String[] args) {
