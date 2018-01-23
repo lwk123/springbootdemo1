@@ -1,0 +1,111 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.gei.kmp4.kaoqinmgr.dao.IAdjustLaborTimeRecordDao">
+
+	<select id="findProByYearAndMonth" resultType="cn.com.gei.kmp4.kaoqinmgr.wrapper.KaoqinProForPersonWrapper">
+		SELECT 
+			kp.name,
+			altr.year, 
+			altr.month, 
+			altr.kaoqinProjectId
+		FROM 
+			GEIKMP3_AdjustLaborTimeRecord AS altr, 
+			GEIKMP3_KaoqinProject AS kp 
+		WHERE 
+			altr.userId = #{userId} 
+		AND altr.year = #{year} 
+		AND altr.month = #{month}
+		<if test="enable != null and enable != ''">
+			AND altr.enable = #{enable}
+		</if>
+		AND altr.kaoqinProjectId = kp.unid
+		ORDER BY altr.year desc, altr.month desc
+	</select>
+
+	<select id="findProByDept" resultType="cn.com.gei.kmp4.kaoqinmgr.wrapper.KaoqinProForDeptWrapper" parameterType="java.util.Map">
+		SELECT 
+			record.userId,
+			edv.personName,
+			record.kaoqinProjectId,
+			project.name AS nowName,
+			(SELECT 
+				pro.name
+			FROM 
+					GEIKMP3_AdjustLaborTimeRecord AS adj 
+				LEFT JOIN 
+					GEIKMP3_KaoqinProject AS pro 
+				ON 
+					adj.kaoqinprojectId=pro.unid 
+				WHERE 
+					adj.userId=record.userId 
+					AND adj.enable='是' 
+					AND adj.year=#{preYear} AND adj.month=#{preMonth} limit 0,1) AS preName,
+			(SELECT 
+				pro2.name
+			FROM 
+				GEIKMP3_AdjustLaborTimeRecord AS adj2 
+				LEFT JOIN 
+					GEIKMP3_KaoqinProject AS pro2 
+				ON 
+					adj2.kaoqinprojectId=pro2.unid 
+				WHERE adj2.userId=record.userId 
+					AND adj2.enable='是' 
+					AND adj2.year=#{nextYear} AND adj2.month=#{nextMonth} limit 0,1) AS nextName
+			FROM 
+				GEIKMP3_AdjustLaborTimeRecord AS record 
+			LEFT JOIN 
+				GEIKMP3_KaoqinProject AS project 
+			ON 
+				record.kaoqinProjectId=project.unid
+			LEFT JOIN 
+				empAndDepView AS edv 
+			ON 
+				record.userId=edv.PersonId
+			WHERE 
+				record.enable='是' 
+				AND edv.Enable='Y' 
+				AND record.year=#{nowYear} 
+				AND record.month=#{nowMonth}
+				AND edv.OrgId=#{orgId};
+	</select>
+	
+	<insert id="savePro" parameterType="cn.com.gei.kmp4.kaoqinmgr.entity.AdjustLaborTimeRecord">
+		INSERT INTO GEIKMP3_AdjustLaborTimeRecord (
+			unid,
+			userId,
+			kaoqinProjectId,
+			enable,
+			createdTime,
+			year,
+			month
+		) VALUES (
+			#{unid},
+			#{userId},
+			#{kaoqinProjectId},
+			#{enable},
+			#{createdTime},
+			#{year},
+			#{month}
+		)
+	</insert>
+	
+	<update id="modifPro" parameterType="cn.com.gei.kmp4.kaoqinmgr.entity.AdjustLaborTimeRecord">
+		UPDATE 
+			GEIKMP3_AdjustLaborTimeRecord AS adtr 
+		SET 
+			adtr.kaoqinProjectId = #{kaoqinProjectId} 
+		WHERE 
+			adtr.unid = #{unid}
+	</update>
+	
+	<select id="findPersonPro" resultType="cn.com.gei.kmp4.kaoqinmgr.entity.AdjustLaborTimeRecord">
+		SELECT 
+			altr.* 
+		FROM 
+			GEIKMP3_AdjustLaborTimeRecord AS altr
+		WHERE 
+			altr.userId = #{userId} 
+		AND altr.year = #{year} 
+		AND altr.month = #{month}
+	</select>
+	
+</mapper>

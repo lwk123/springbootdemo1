@@ -1,0 +1,9 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.gei.kmp4.kaoqinmgr.dao.IKaoqinProjectDao">
+
+	<select id="findAllPro" resultType="cn.com.gei.kmp4.kaoqinmgr.entity.KaoqinProject">
+		SELECT kp.* 
+		FROM GEIKMP3_KaoqinProject AS kp 
+	</select>
+	
+</mapper>

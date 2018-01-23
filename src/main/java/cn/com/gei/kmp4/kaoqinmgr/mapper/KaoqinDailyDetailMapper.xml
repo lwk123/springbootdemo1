@@ -1,0 +1,32 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.gei.kmp4.kaoqinmgr.dao.IKaoqinDailyDetailDao">
+
+	<resultMap type="cn.com.gei.kmp4.kaoqinmgr.entity.KaoqinDailyDetail"
+		id="KaoqinDailyDetail">
+		<result column="Absent_Manhaur" property="absentManhaur" />
+		<result column="Evection_ProjectName" property="evectionProjectName" />
+		<result column="Ingore_Manhaur" property="ingoreManhaur" />
+		<result column="Leave_Manhaur" property="leaveManhaur" />
+		<result column="Outer_ProjectName" property="outerProjectName" />
+		<result column="Outer_Manhaur" property="outerManhaur" />
+	</resultMap>
+
+	<select id="findById" resultMap="KaoqinDailyDetail">
+		select
+		kdd.*
+		from
+		GEIKMP3_KaoqinDailyDetail AS kdd
+		where unid = #{unid}
+	</select>
+
+	<select id="findByEmployeeAndDate" resultMap="KaoqinDailyDetail">
+		select
+		kdd.*
+		from
+		GEIKMP3_KaoqinDailyDetail AS kdd
+		where kdd.employeeId = #{employeeId}
+		and kdd.statDate = #{statDate}
+		and kdd.kaoqinDaily = 'Sign'
+	</select>
+
+</mapper>

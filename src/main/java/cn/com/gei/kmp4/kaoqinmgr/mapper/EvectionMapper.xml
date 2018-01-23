@@ -1,0 +1,21 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.gei.kmp4.kaoqinmgr.dao.IEvectionDao">
+
+	<select id="findEvectionByUser" resultType="cn.com.gei.kmp4.kaoqinmgr.entity.KaoqinDailyInfo">
+		SELECT
+			eap.Unid AS applicantId,
+			eap.EvectionTitle AS title,
+			eap.EvectionAddress AS address,
+			esr.BeginTime AS startTime,
+			esr.EndTime AS endTime,
+			esr.countIndex AS countIndex
+		FROM GEIKMP3_EvectionApplicant AS eap,
+			 GEIKMP3_EvectionSubsidyRecord AS esr
+		WHERE
+			eap.Unid=esr.evectionApplicantId AND esr.EmployeeId = #{empId}
+		<![CDATA[AND esr.BeginTime <= #{searchEndTime} ]]>
+		<![CDATA[AND esr.EndTime >= #{searchStartTime} ]]>
+		ORDER BY esr.BeginTime
+	</select>
+
+</mapper>

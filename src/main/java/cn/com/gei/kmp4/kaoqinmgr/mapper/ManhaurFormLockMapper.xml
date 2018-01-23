@@ -1,0 +1,13 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.gei.kmp4.kaoqinmgr.dao.IManhaurFormLockDao">
+	<select id="findMFLByTime" resultType="cn.com.gei.kmp4.kaoqinmgr.entity.ManhaurFormLock">
+		select
+		kml.*
+		from
+		GEIKMP3_ManhaurFormLock AS kml
+		where 
+			manhaurYear=#{year}
+		and
+			manhaurMonth=#{month}
+	</select>
+</mapper>

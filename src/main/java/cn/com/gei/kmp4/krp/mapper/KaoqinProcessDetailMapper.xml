@@ -1,0 +1,56 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.gei.kmp4.krp.dao.IKaoqinProcessDetailDao">
+
+	<select id="findFailtureByUser"
+		resultType="cn.com.gei.kmp4.kaoqinmgr.wrapper.FailtureDailyWrapper">
+		SELECT
+		onOrOffDuty AS ldkType,
+		CASE WHEN onOrOffDuty='下班' THEN offDutyTime ELSE onDutyTime END AS
+		ldkTime,
+		CASE WHEN processStatus='FINISHED' THEN lastProcessMind ELSE processStatus
+		END AS result
+		FROM kmp4_kaoqin_failtureDaily AS fd, KC_Employee AS emp
+		WHERE fd.employeeId = emp.id AND emp.kmp3EmployeeId = #{empId}
+			<![CDATA[ AND failtureDate <= #{searchEndTime} ]]>
+			<![CDATA[ AND failtureDate >= #{searchStartTime} ]]>
+		ORDER BY failtureDate;
+	</select>
+
+	<select id="findLeaveDailyByUser"
+		resultType="cn.com.gei.kmp4.kaoqinmgr.wrapper.LeaveDailyWrapper">
+		SELECT 
+			ld.id AS id,
+			ld.leaveType AS reasonType,
+			ld.beginDate AS startTime,
+			ld.endDate AS endTime,
+			CASE WHEN ld.processStatus='FINISHED' THEN ld.lastProcessMind ELSE ld.processStatus END AS result
+		 FROM kmp4_kaoqin_leaveDaily AS ld,KC_Employee AS emp 
+		 WHERE ld.employeeId=emp.id AND emp.kmp3EmployeeId = #{empId}
+		 <![CDATA[AND ld.beginDate <= #{searchEndTime} ]]>
+		 <![CDATA[AND ld.endDate >= #{searchStartTime} ]]>
+		 ORDER BY beginDate;
+	</select>
+	
+	<select id="findOutDailyByUser"
+		resultType="cn.com.gei.kmp4.kaoqinmgr.wrapper.OutDailyWrapper">
+		SELECT 
+			kod.address AS address,
+			CASE WHEN kod.processStatus='FINISHED' THEN kod.lastProcessMind ELSE kod.processStatus END AS result,
+			kodi.beginDate AS startTime,
+			kodi.endDate AS endTime
+		FROM kmp4_kaoqin_outerDaily AS kod,kmp4_kaoqin_outerDailyItem AS kodi,KC_Employee AS emp
+		WHERE kod.id=kodi.outerDailyId AND kodi.employeeId=emp.id 
+		AND emp.kmp3EmployeeId = #{empId}
+		 <![CDATA[AND kodi.beginDate<= #{searchEndTime} ]]>
+		 <![CDATA[AND kodi.endDate >= #{searchStartTime} ]]>
+		 ORDER BY kodi.beginDate;
+	</select>
+	
+	<select id="findEvectionProcessStatus" resultType="java.lang.String">
+		SELECT 
+			CASE WHEN kod.processStatus='FINISHED' THEN kod.lastProcessMind ELSE kod.processStatus END AS result
+		FROM kmp4_kaoqin_evectionDaily AS ed 
+		WHERE ed.kmpEvectionApplicantId = #{evectionAppId} 
+		AND ed.countIndex = #{countIndex}
+	</select>
+</mapper>

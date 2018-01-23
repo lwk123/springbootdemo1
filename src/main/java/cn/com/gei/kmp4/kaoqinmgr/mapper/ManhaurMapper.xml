@@ -1,0 +1,89 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.gei.kmp4.kaoqinmgr.dao.IManhaurDao">
+	<sql id="insertSQL">
+		INSERT INTO KA_Manhaur (
+		Unid,
+		AffairId,
+		beginDate,
+		endDate,
+		PersonId,
+		Summary,
+		timeConsume,
+		status,
+		equivManhaur,
+		equivManhaurXishu,
+		originalTimeConsume) VALUES (
+		#{unid},
+		#{affairId},
+		#{beginDate},
+		#{endDate},
+		#{personId},
+		#{summary},
+		#{timeConsume},
+		#{status},
+		#{equivManhaur},
+		#{equivManhaurXishu},
+		#{originalTimeConsume})
+	</sql>
+	<insert id="saveProjectManhaur" flushCache="true" statementType="PREPARED"
+		parameterType="cn.com.gei.kmp4.kaoqinmgr.entity.Manhaur">
+		<include refid="insertSQL"></include>
+	</insert>
+	
+	<select id="findMById" resultType="cn.com.gei.kmp4.kaoqinmgr.entity.Manhaur">
+		select
+		km.*
+		from
+		KA_Manhaur AS km
+		where 
+		unid = #{unid}
+	</select>
+
+	<select id="findMForSearch" resultType="cn.com.gei.kmp4.kaoqinmgr.entity.Manhaur">
+		select
+			km.*
+		from
+			KA_Manhaur AS km
+		where 1=1
+		<if test="employeeId != null and employeeId != ''">
+			and km.personId = #{employeeId}
+		</if>
+		<if test="timeStart != null and timeStart != ''">
+			 <![CDATA[ and km.beginDate >= #{timeStart} ]]>
+		</if>
+		<if test="timeEnd != null and timeEnd != ''">
+			 <![CDATA[ and km.endDate <= #{timeEnd} ]]>
+		</if>
+		<if test="affairId != null and affairId != ''">
+			 and km.affairId = #{affairId}
+		</if>
+		<if test="offset >= 0 and count>0">
+			LIMIT #{offset}, #{count}
+		</if>
+	</select>
+	<delete id="deleteManhaurByEmpAndTime">
+		DELETE FROM
+		KA_Manhaur
+		WHERE personId = #{employeeId}
+		<![CDATA[ and beginDate >= '${timeStart}' ]]>
+		<![CDATA[ and endDate <= '${timeEnd}']]>
+	</delete>
+	
+	<select id="findAffairMByYear" resultType="cn.com.gei.kmp4.kaoqinmgr.wrapper.ProjectManhaur">
+		SELECT 
+			km.PersonId AS personId,
+			YEAR(km.endDate) AS year,
+			MONTH(km.endDate) AS month,
+			km.AffairId AS affairId,
+			ot.operation_Title AS affairName,
+			sum(km.originalTimeConsume) AS originalTimeConsume
+		FROM KA_Manhaur AS km
+		LEFT JOIN OPERATION AS ot ON km.AffairId=ot.operation_Id 
+		WHERE km.PersonId=#{personId}
+		AND YEAR(km.endDate)=#{manhaurYear}
+		AND km.originalTimeConsume > 0
+		GROUP BY YEAR(km.endDate),MONTH(km.endDate),km.AffairId
+		ORDER BY YEAR(km.endDate) DESC,MONTH(km.endDate) DESC;
+	</select>
+
+</mapper>

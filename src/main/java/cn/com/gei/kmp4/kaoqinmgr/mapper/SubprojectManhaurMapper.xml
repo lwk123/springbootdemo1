@@ -1,0 +1,61 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.gei.kmp4.kaoqinmgr.dao.ISubprojectManhaurDao">
+	<sql id="insertSQL">
+		INSERT INTO KA_SubprojectManhaur (
+		Unid,
+		ParentManhaurId,
+		SubprojectId,
+		AffairId,
+		beginDate,
+		endDate,
+		PersonId,
+		Summary,
+		timeConsume,
+		originalTimeConsume) VALUES (
+		#{unid},
+		#{parentManhaurId},
+		#{subprojectId},
+		#{affairId},
+		#{beginDate},
+		#{endDate},
+		#{personId},
+		#{summary},
+		#{timeConsume},
+		#{originalTimeConsume})
+	</sql>
+	<insert id="saveSubProjectManhaur" flushCache="true" statementType="PREPARED"
+		parameterType="cn.com.gei.kmp4.kaoqinmgr.entity.SubprojectManhaur">
+		<include refid="insertSQL"></include>
+	</insert>
+
+	<select id="findSubMForSearch" resultType="cn.com.gei.kmp4.kaoqinmgr.entity.SubprojectManhaur">
+		select
+			sm.*
+		from
+			KA_SubprojectManhaur AS sm
+		where 1=1
+		<if test="parentManhaurId != null and parentManhaurId != ''">
+			and sm.parentManhaurId = #{parentManhaurId}
+		</if>
+		<if test="employeeId != null and employeeId != ''">
+			and sm.personId = #{employeeId}
+		</if>
+		<if test="timeStart != null and timeStart != ''">
+			 <![CDATA[ and sm.beginDate >= #{timeStart} ]]>
+		</if>
+		<if test="timeEnd != null and timeEnd != ''">
+			 <![CDATA[ and sm.endDate <= #{timeEnd} ]]>
+		</if>
+		<if test="affairId != null and affairId != ''">
+			 and km.affairId = #{affairId}
+		</if>
+	</select>
+	<delete id="deleteSubManhaurByEmpAndTime">
+		DELETE FROM
+		KA_SubprojectManhaur
+		WHERE personId = #{employeeId}
+		<![CDATA[and beginDate >= #{timeStart}]]>
+		<![CDATA[and endDate <= #{timeEnd}]]>
+	</delete>
+
+</mapper>

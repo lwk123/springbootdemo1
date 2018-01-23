@@ -1,0 +1,148 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.gei.kmp4.kaoqinmgr.dao.IManhaurWeekFormDao">
+
+	<resultMap type="cn.com.gei.kmp4.kaoqinmgr.entity.ManhaurWeekForm"
+		id="ManhaurWeekForm">
+		<result column="EMPLOYEE_ID" property="employeeId" />
+		<result column="MANHAUR_YEAR" property="manhaurYear" />
+		<result column="MANHAUR_MONTH" property="manhaurMonth" />
+		<result column="MANHAUR_WORK_TIME" property="manhaurWorkTime" />
+		<result column="MANHAUR_LATE_TIME" property="manhaurLateTime" />
+		<result column="MANHAUR_EXTRA_TIME" property="manhaurExtraTime" />
+		<result column="MANHAUR_SICK_LEAVE_TIME" property="manhaurSickLeaveTime" />
+		<result column="MANHAUR_AFFAIR_LEAVE_TIME" property="manhaurAffairLeaveTime" />
+		<result column="BEGIN_DATE" property="beginDate" />
+		<result column="END_DATE" property="endDate" />
+		<result column="LEAVE_TIME" property="leaveTime" />
+		<result column="LEAVE_TIME_WITH_SALARY" property="leaveTimeWithSalary" />
+		<result column="MANHAUR_MARRY_LEAVE_TIME" property="manhaurMarryLeaveTime" />
+		<result column="MANHAUR_BIRTH_LEAVE_TIME" property="manhaurBirthLeaveTime" />
+		<result column="MANHAUR_DEAD_LEAVE_TIME" property="manhaurDeadLeaveTime" />
+		<result column="CREATE_DATE" property="createDate" />
+		<result column="manhaurWorkDay" property="manhaurWorkDay" />
+	</resultMap>
+
+	<resultMap type="cn.com.gei.kmp4.kaoqinmgr.wrapper.ManhaurWeekFormWrapper"
+		id="ManhaurWeekFormWrapper" extends="ManhaurWeekForm">
+	</resultMap>
+
+	<select id="findMWFById" resultMap="ManhaurWeekForm">
+		select
+		mf.*
+		from
+		GEIKMP3_ManhaurForm AS mf
+		where unid = #{unid}
+	</select>
+
+	<select id="findMWFForSearch" resultMap="ManhaurWeekFormWrapper">
+		select
+		mf.*,
+		emp.personname AS employeeName,
+		edv.DEPARTMENT_TITLE AS deptName,
+		edv.type AS personType,
+		(SELECT CAST(sum(kam.originalTimeConsume) as decimal(38, 2)) FROM KA_Manhaur AS kam WHERE kam.PersonId=mf.EMPLOYEE_ID AND kam.beginDate=mf.BEGIN_DATE AND kam.endDate=mf.END_DATE) as allocation
+		<if test='withManhaurDetail == "Y"'>
+			,(SELECT group_concat(CONCAT(op.operation_title,'(',km2.originalTimeConsume,')')) FROM KA_Manhaur AS km2 LEFT JOIN OPERATION AS op ON km2.affairId = op.operation_id WHERE km2.PersonId=mf.EMPLOYEE_ID AND km2.beginDate=mf.BEGIN_DATE AND km2.endDate=mf.END_DATE) AS allocationDetail
+		</if>
+		from
+		GEIKMP3_ManhaurForm AS mf
+		left join KA_Employee AS emp on mf.EMPLOYEE_ID=emp.personId
+		join empAndDepView AS edv on mf.EMPLOYEE_ID = edv.personId
+		where 1 = 1
+		<if test="deptId != null and deptId != ''">
+			and edv.orgId = #{deptId}
+		</if>
+		<if test="employeeId != null and employeeId != ''">
+			and mf.EMPLOYEE_ID = #{employeeId}
+		</if>
+		<if test="timeStart != null and timeStart != ''">
+			 <![CDATA[ and mf.BEGIN_DATE >= #{timeStart} ]]>
+		</if>
+		<if test="timeEnd != null and timeEnd != ''">
+			 <![CDATA[ and mf.END_DATE <= #{timeEnd} ]]>
+		</if>
+		<choose>
+			<when test='status=="Y"'>
+				having (mf.manhaur_work_time = allocation and mf.LEAVE_TIME = 0)
+			</when>
+			<when test='status=="N"'>
+				having (allocation = 0 or allocation is null or mf.manhaur_work_time != allocation or mf.LEAVE_TIME > 0)
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+		ORDER BY edv.orgId,mf.BEGIN_DATE
+		<if test="offset >= 0 and count>0">
+			LIMIT #{offset}, #{count}
+		</if>
+	</select>
+	
+	<select id="findMonthManhaur" resultMap="ManhaurWeekFormWrapper">
+		select
+		mf.MANHAUR_YEAR AS manhaurYear,
+		mf.MANHAUR_MONTH AS manhaurMonth,
+		sum(mf.MANHAUR_WORK_TIME) AS MANHAUR_WORK_TIME,
+		sum(mf.MANHAUR_EXTRA_TIME) AS MANHAUR_EXTRA_TIME,
+		sum(mf.MANHAUR_SICK_LEAVE_TIME) AS MANHAUR_SICK_LEAVE_TIME,
+		sum(mf.MANHAUR_AFFAIR_LEAVE_TIME) AS MANHAUR_AFFAIR_LEAVE_TIME,
+		sum(mf.otherHoliday) AS otherHoliday,
+		sum(mf.LEAVE_TIME_WITH_SALARY) AS LEAVE_TIME_WITH_SALARY,
+		sum(mf.MANHAUR_MARRY_LEAVE_TIME) AS MANHAUR_MARRY_LEAVE_TIME,
+		sum(mf.MANHAUR_BIRTH_LEAVE_TIME) AS MANHAUR_BIRTH_LEAVE_TIME,
+		sum(mf.MANHAUR_DEAD_LEAVE_TIME) AS MANHAUR_DEAD_LEAVE_TIME,
+		sum(mf.standardWorkTime) AS standardWorkTime,
+		sum(mf.LEAVE_TIME) AS LEAVE_TIME,
+		sum(mf.MANHAUR_LATE_TIME) AS MANHAUR_LATE_TIME,
+		sum(mf.daoXiu) AS daoXiu,
+		sum(mf.manhaurWorkDay) AS manhaurWorkDay,
+		mf.EMPLOYEE_ID,
+		emp.personname AS employeeName,
+		edv.DEPARTMENT_TITLE AS deptName,
+		edv.type AS personType
+		<if test="timeMonth != null and timeMonth != ''">
+			<![CDATA[,(SELECT CAST(sum(kam.originalTimeConsume) as decimal(38, 2)) FROM KA_Manhaur AS kam WHERE kam.PersonId=mf.EMPLOYEE_ID AND kam.beginDate>=#{timeStart} AND kam.endDate<=#{timeEnd}) as allocation]]>
+		</if>
+		from
+		GEIKMP3_ManhaurForm AS mf
+		left join KA_Employee AS emp on mf.EMPLOYEE_ID=emp.personId
+		join empAndDepView AS edv on mf.EMPLOYEE_ID = edv.personId
+		where mf.MANHAUR_YEAR=#{timeYear}
+		<if test="timeMonth != null and timeMonth != ''">
+			AND mf.MANHAUR_MONTH=#{timeMonth}
+		</if>
+		<if test="deptId != null and deptId != ''">
+			and edv.orgId = #{deptId}
+		</if>
+		<if test="employeeId != null and employeeId != ''">
+			and mf.EMPLOYEE_ID = #{employeeId}
+		</if>
+		GROUP BY mf.EMPLOYEE_ID,mf.MANHAUR_YEAR,mf.MANHAUR_MONTH
+		order by mf.MANHAUR_MONTH,emp.endDate,emp.beginDate
+	</select>
+	
+	<select id="findUserMonthManhaurs" resultType="cn.com.gei.kmp4.kaoqinmgr.wrapper.UserMonthManhaurWrapper">
+		SELECT 
+			ede.OrgId AS deptId,
+			mf.EMPLOYEE_ID AS personId,
+			ede.personName AS personName,
+			sum(mf.standardWorkTime) AS standardWorkTime,
+			sum(mf.manhaurWorkDay) AS manhaurWorkDay,
+			sum(mf.LEAVE_TIME) AS leaveTime,
+			sum(mf.MANHAUR_WORK_TIME) AS manhaurWorkTime,
+			sum(mf.daoXiu) AS daoXiu,
+			sum(mf.LEAVE_TIME_WITH_SALARY) AS salaryLeave
+			<![CDATA[,(SELECT CAST(sum(kam.originalTimeConsume) as decimal(38, 2)) FROM KA_Manhaur AS kam WHERE kam.PersonId=mf.EMPLOYEE_ID AND kam.beginDate>=#{timeStart} AND kam.endDate<=#{timeEnd}) as allocation]]>
+		FROM 
+			GEIKMP3_ManhaurForm AS mf 
+			LEFT JOIN empAndDepView AS ede ON mf.EMPLOYEE_ID=ede.PersonId
+		WHERE ede.`Enable`='Y' 
+		AND MANHAUR_YEAR = #{year} 
+		AND MANHAUR_MONTH = #{month}
+		<if test="deptId != null and deptId != ''">
+			AND ede.OrgId = #{deptId}
+		</if>
+		GROUP BY mf.EMPLOYEE_ID 
+		ORDER BY ede.OrgId;
+	</select>
+
+</mapper>

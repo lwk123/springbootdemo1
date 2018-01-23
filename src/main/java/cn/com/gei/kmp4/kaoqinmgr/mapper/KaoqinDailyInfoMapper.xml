@@ -1,0 +1,60 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.gei.kmp4.kaoqinmgr.dao.IKaoqinDailyInfoDao">
+
+	<select id="findKDIById" resultType="cn.com.gei.kmp4.kaoqinmgr.entity.KaoqinDailyInfo">
+		select
+		kdi.*
+		from
+		GEIKMP3_KaoqinDailyInfo AS kdi
+		where unid = #{unid}
+	</select>
+
+	<select id="findKDIByEmployeeAndDate" resultType="cn.com.gei.kmp4.kaoqinmgr.entity.KaoqinDailyInfo">
+		select
+		kdi.*
+		from
+		GEIKMP3_KaoqinDailyInfo AS kdi
+		where kdi.employeeId = #{employeeId}
+		and kdi.statDate = #{statDate}
+	</select>
+
+	<select id="findKDIForSearch" resultType="cn.com.gei.kmp4.kaoqinmgr.wrapper.KaoqinDailyInfoWrapper">
+		select
+			kdi.*,
+			emp.personname AS employeeName
+		<if test='kaoqinStatus == "Y"'>
+			,(SELECT GROUP_CONCAT(kqd.kaoqinDaily) FROM GEIKMP3_KaoqinDailyDetail AS kqd WHERE kqd.StatDate=kdi.StatDate AND kqd.EmployeeId=kdi.EmployeeId) AS kaoqinStatus
+		</if>
+		from
+			GEIKMP3_KaoqinDailyInfo AS kdi
+			left join KA_Employee AS emp on kdi.employeeId=emp.personId
+		where 1=1
+		<if test="employeeId != null and employeeId != ''">
+			and kdi.employeeId = #{employeeId}
+		</if>
+		<if test="timeStart != null and timeStart != ''">
+			 <![CDATA[ and kdi.statDate >= #{timeStart} ]]>
+		</if>
+		<if test="timeEnd != null and timeEnd != ''">
+			 <![CDATA[ and kdi.statDate <= #{timeEnd} ]]>
+		</if>
+		<if test="status != null and status != ''">
+		<choose>
+			<when test='status=="异常"'>
+			and kdi.AbsentTime > 0
+			</when>
+			<otherwise>
+			 and kdi.status = #{status}
+			</otherwise>
+		</choose>
+		</if>
+		<if test="deptId != null and deptId != ''">
+			 and kdi.departmentId = #{deptId}
+		</if>
+		  ORDER BY kdi.StatDate desc
+		<if test="offset >= 0 and count>0">
+			LIMIT #{offset}, #{count}
+		</if>
+	</select>
+
+</mapper>
